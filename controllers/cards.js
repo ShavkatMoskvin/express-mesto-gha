@@ -1,8 +1,8 @@
-const card = require('../models/card');
+const Card = require('../models/card');
 const { BAD_REQUEST, NOT_FOUND, DEFAULT_ERROR } = require('../utils/constants');
 
 module.exports.getCards = (req, res) => {
-  card
+  Card
     .find({})
     .then((cards) => res.send(cards))
     .catch((err) => {
@@ -16,7 +16,7 @@ module.exports.createCard = (req, res) => {
   
   console.log(req.body)
 
-  card
+  Card
     .create({ name, link, owner })
     .then((card) => res.send(card))
     .catch((err) => {
@@ -32,7 +32,7 @@ module.exports.createCard = (req, res) => {
 
 module.exports.removeCard = (req, res) => {
   const { cardId } = req.params;
-  card
+  Card
     .findByIdAndDelete(cardId)
     .then((card) => {
       if (card) {
@@ -46,7 +46,9 @@ module.exports.removeCard = (req, res) => {
         res
           .status(BAD_REQUEST)
           .send({ message: 'Передан некорректный ID карточки' });
-      }
+      } else { 
+        res.status(DEFAULT_ERROR).send({ message: `Что-то пошло не так: ${err}` }); 
+      } 
     });
 };
 
@@ -54,7 +56,7 @@ module.exports.setLike = (req, res) => {
   const { cardId } = req.params;
   const userId = req.user._id;
 
-  card
+  Card
     .findByIdAndUpdate(cardId, { $addToSet: { likes: userId } }, { new: true })
     .then((card) => {
       if (card) {
@@ -85,7 +87,7 @@ module.exports.removeLike = (req, res) => {
   const { cardId } = req.params;
   const userId = req.user._id;
 
-  card
+  Card
     .findByIdAndUpdate(cardId, { $pull: { likes: userId } }, { new: true })
     .then((card) => {
       if (card) {
