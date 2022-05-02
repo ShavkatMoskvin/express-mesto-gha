@@ -13,7 +13,7 @@ module.exports.getCards = (req, res) => {
 module.exports.createCard = (req, res) => {
   const { name, link } = req.body;
   const owner = req.user._id;
-  
+
   console.log(req.body)
 
   Card
@@ -46,9 +46,9 @@ module.exports.removeCard = (req, res) => {
         res
           .status(BAD_REQUEST)
           .send({ message: 'Передан некорректный ID карточки' });
-      } else { 
-        res.status(DEFAULT_ERROR).send({ message: `Что-то пошло не так: ${err}` }); 
-      } 
+      } else {
+        res.status(DEFAULT_ERROR).send({ message: `Что-то пошло не так: ${err}` });
+      }
     });
 };
 
