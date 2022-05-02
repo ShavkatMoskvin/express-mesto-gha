@@ -6,7 +6,7 @@ const app = express();
 const { PORT = 3000 } = process.env;
 app.use(express.json());
 
-const { NOT_FOUND, DEFAULT_ERROR } = require('./utils/constants');
+const { NOT_FOUND, mongoose } = require('./utils/constants');
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
 
@@ -18,13 +18,12 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(userRouter);
-app.use(cardRouter);
-
-const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost:27017/mestodb', {
   useNewUrlParser: true,
 });
+
+app.use(userRouter);
+app.use(cardRouter);
 
 app.use('/', (req, res) => {
   res.status(NOT_FOUND).send({ message: 'Неорректный путь запроса' });
@@ -40,11 +39,7 @@ app.use('/', (req, res) => {
 //   }
 // });
 
-
-
 app.listen(PORT, () => {
   // Если всё работает, консоль покажет, какой порт приложение слушает
-  console.log(`App listening on port ${PORT}`)
-}) 
-
-
+  console.log(`App listening on port ${PORT}`);
+});
