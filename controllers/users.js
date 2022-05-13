@@ -1,5 +1,9 @@
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const userModel = require('../models/user');
 const { BAD_REQUEST, NOT_FOUND, DEFAULT_ERROR } = require('../utils/constants');
+
+const { NODE_ENV, JWT_SECRET } = process.env;
 
 module.exports.getUser = (req, res) => {
   const { userId } = req.params;
@@ -32,19 +36,21 @@ module.exports.getUsers = (req, res) => {
     });
 };
 
-module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  userModel
-    .create({ name, about, avatar })
-    .then((user) => res.send(user))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res
-          .status(BAD_REQUEST)
-          .send({ message: 'Переданы некорректные или неполные данные' });
-      } else {
-        res.status(DEFAULT_ERROR).send({ message: 'Что-то пошло не так' });
-      }
+module.exports.createUser = (req, res, next) => {
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
+
+  console.log(req.body);
+
+  bcrypt.hash(password, 10)
+    .then((hash) => {
+      userModel
+        .create({
+          name, about, avatar, email, password: hash,
+        })
+        .then((user) => res.send(user))
+        .catch(next);
     });
 };
 
@@ -94,4 +100,32 @@ module.exports.updateUserAvatar = (req, res) => {
           res.status(DEFAULT_ERROR).send({ message: 'Что-то пошло не так' });
       }
     });
+};
+
+module.exports.login = (req, res, next) => {
+  const { email, password } = req.body;
+
+  userModel.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign(
+        { _id: user._id },
+        // eslint-disable-next-line no-undef
+        NODE_ENV === 'production' ? JWT_SECRET : 'secret',
+        { expiresIn: '7d' },
+      );
+
+      res
+        .cookie('jwt', token, {
+          httpOnly: true,
+          maxAge: 3600000 * 24 * 7,
+        })
+        .send({ message: 'Успешный вход' });
+    })
+    .catch(next);
+};
+
+module.exports.getCurrentUser = (req, res, next) => {
+  userModel.findById(req.user._id)
+    .then((user) => res.send(user))
+    .catch(next);
 };

@@ -7,16 +7,12 @@ const { PORT = 3000 } = process.env;
 app.use(express.json());
 
 const { NOT_FOUND, mongoose } = require('./utils/constants');
+const { login, createUser } = require('./controllers/users');
 const userRouter = require('./routes/users');
 const cardRouter = require('./routes/cards');
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '626c2a9150153667d839b9e6',
-  };
-
-  next();
-});
+app.post('/signin', login);
+app.post('/signup', createUser);
 
 mongoose.connect('mongodb://localhost:27017/mestodb', {
   useNewUrlParser: true,
