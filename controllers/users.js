@@ -30,11 +30,7 @@ module.exports.getUser = (req, res, next) => {
 module.exports.getUsers = (req, res, next) => {
   userModel
     .find({})
-    .then((user) => {
-      if (user) {
-        throw new NotFoundError('Пользователь по указанному id не найден');
-      }
-    })
+    .then((users) => res.status(200).send(users))
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new BadRequestError('Переданы некорректные данные'));
@@ -49,24 +45,24 @@ module.exports.createUser = (req, res, next) => {
     name, about, avatar, email, password,
   } = req.body;
 
-  bcrypt.hash(password, 10)
-    .then((hash) => {
-      userModel
-        .create({
-          name, about, avatar, email, password: hash,
-        })
-        .then((user) => {
-          if (user) {
-            throw new ConflictError('Пользователь с данным email уже сущуствует');
-          }
-        })
-        .catch((err) => {
-          if (err.name === 'ValidationError') {
-            next(new BadRequestError(`${Object.values(err.errors).map((error) => error.message).join(', ')}`));
-          } else {
-            next(err);
-          }
-        });
+  userModel.findOne({ email })
+    .then((user) => {
+      if (user) {
+        throw new ConflictError('Пользователь с данным email уже сущуствует');
+      } else {
+        return bcrypt.hash(password, 10);
+      }
+    })
+    .then((hash) => userModel.create({
+      name, about, avatar, email, password: hash,
+    }))
+    .then((data) => res.status(201).send(data))
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new BadRequestError(`${Object.values(err.errors).map((error) => error.message).join(', ')}`));
+      } else {
+        next(err);
+      }
     });
 };
 
