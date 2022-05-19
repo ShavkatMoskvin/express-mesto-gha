@@ -58,6 +58,7 @@ module.exports.createUser = (req, res, next) => {
     .then((hash) => userModel.create({
       name, about, avatar, email, password: hash,
     }))
+    // eslint-disable-next-line no-unused-vars
     .then((user) => res.status(200).send({
       data: {
         name, about, avatar, email,
