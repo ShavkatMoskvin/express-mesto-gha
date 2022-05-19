@@ -14,8 +14,10 @@ module.exports.getUser = (req, res, next) => {
   userModel
     .findById(userId)
     .then((user) => {
-      if (user) {
+      if (!user) {
         throw new NotFoundError('Пользователь не найден');
+      } else {
+        res.send(user);
       }
     })
     .catch((err) => {
@@ -56,7 +58,11 @@ module.exports.createUser = (req, res, next) => {
     .then((hash) => userModel.create({
       name, about, avatar, email, password: hash,
     }))
-    .then((data) => res.status(201).send(data))
+    .then((user) => res.status(200).send({
+      data: {
+        name, about, avatar, email,
+      },
+    }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError(`${Object.values(err.errors).map((error) => error.message).join(', ')}`));

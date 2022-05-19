@@ -4,8 +4,6 @@ const NotFoundError = require('../errors/NotFoundError');
 const BadRequestError = require('../errors/BadRequestError');
 const ForbiddenError = require('../errors/ForbiddenError');
 
-const { NOT_FOUND } = require('../utils/constants');
-
 module.exports.getCards = (req, res, next) => {
   Card
     .find({})
@@ -65,8 +63,10 @@ module.exports.setLike = (req, res, next) => {
   Card
     .findByIdAndUpdate(cardId, { $addToSet: { likes: userId } }, { new: true })
     .then((card) => {
-      if (card) {
+      if (!card) {
         throw new NotFoundError('Публикация по заданному _id не найдена');
+      } else {
+        res.send(card);
       }
     })
     .catch((err) => {
@@ -84,10 +84,10 @@ module.exports.removeLike = (req, res, next) => {
   Card
     .findByIdAndUpdate(cardId, { $pull: { likes: userId } }, { new: true })
     .then((card) => {
-      if (card) {
+      if (!card) {
         throw new NotFoundError('Публикация по заданному _id не найдена');
       } else {
-        res.status(NOT_FOUND).send({ message: 'Карточка не найдена' });
+        res.send(card);
       }
     })
     .catch((err) => {
